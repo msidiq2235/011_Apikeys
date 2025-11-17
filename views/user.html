@@ -151,7 +151,6 @@
             }
 
             try {
-                // 1. Simpan (create/update) user
                 const saveResponse = await fetch('/api/user/save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -166,11 +165,10 @@
 
                 setResult(`Sukses: ${data.message}`);
                 
-                // 2. Simpan User ID untuk dipakai nanti
                 const userId = data.user.id;
                 hiddenUserId.value = userId;
 
-                // 3. Ambil detail user (termasuk semua keys)
+                // Ambil detail user (termasuk semua keys)
                 await loadUserKeys(userId);
 
             } catch (error) {
@@ -188,7 +186,6 @@
             }
 
             try {
-                // Panggil endpoint generate-key
                 const response = await fetch(`/api/user/${userId}/generate-key`, {
                     method: 'POST'
                 });
@@ -199,7 +196,6 @@
                     throw new Error(data.message || 'Gagal generate key.');
                 }
                 
-                // Tampilkan key baru di display
                 displayApiKey.value = data.apiKey.key;
                 setResult("Sukses: Key baru telah di-generate. Key lama dinonaktifkan.");
 
@@ -210,7 +206,6 @@
 
         // --- Fungsi Bantuan ---
 
-        // Fungsi untuk mengambil data user + keys, dan memuatnya ke form
         async function loadUserKeys(userId) {
             try {
                 const response = await fetch(`/api/user/${userId}`);
@@ -220,13 +215,18 @@
                     throw new Error(userData.message || 'Gagal memuat detail user.');
                 }
 
-                // Isi form dengan data yang ada
                 inputFirstname.value = userData.firstname || '';
                 inputLastname.value = userData.lastname || '';
                 inputEmail.value = userData.email || '';
 
-                // Cari key yang masih aktif (outofdate == false)
-                const activeKey = userData.apiKeys.find(key => key.outofdate === false);
+                // === INI PERBAIKANNYA ===
+                // 1. Kita cek 'userData.apikeys' (huruf kecil)
+                // 2. Kita beri '|| []' untuk memastikan ini adalah array (walaupun kosong)
+                const keysArray = userData.apikeys || []; 
+                
+                // 3. Sekarang .find() aman dijalankan di 'keysArray'
+                const activeKey = keysArray.find(key => key.outofdate === false);
+                // === AKHIR PERBAIKAN ===
 
                 if (activeKey) {
                     displayApiKey.value = activeKey.key;
@@ -239,13 +239,11 @@
             }
         }
 
-        // Fungsi untuk menampilkan pesan di area <pre>
         function setResult(message, isError = false) {
             resultArea.textContent = message;
             resultArea.style.color = isError ? '#d9534f' : '#28a745';
             resultArea.style.borderColor = isError ? '#d9534f' : '#28a745';
         }
-
     </script>
 </body>
 </html>
